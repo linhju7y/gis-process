@@ -19,3 +19,12 @@ Route::group(['prefix' => 'exam'], function() {
     Route::get("/", 'ExamController@index');
     Route::get("cadastral", 'ExamController@cadastral');
 });
+
+Route::group(['prefix' => 'api'], function() {
+    Route::get("get-subdivision/{id?}", "ApiController@getSubdivision");
+});
+
+Route::group(['prefix' => 'geo'], function() {
+    Route::match(['get', 'post'], "import-land", "GeoController@land");
+    Route::match(['get', 'post'], "flush-land", "GeoController@flushland");
+});

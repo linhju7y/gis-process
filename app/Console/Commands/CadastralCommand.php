@@ -59,6 +59,5 @@ class CadastralCommand extends Command
                 unlink(public_path('cadastral') . '/' . $item);
             }
         }
-        throw new \Exception("cadastral_scheduling");
     }
 }
