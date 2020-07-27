@@ -59,7 +59,7 @@ class Cadastral implements ShouldQueue
         $data = DB::table("geo_land_item")->where("properties->vn2000", $vn2k)->first();
         $subdivision = isset($data) && isset($data->subdivision_id) ? $data->subdivision_id : 0;
         if ($subdivision == 0) {
-            if (copy($fileKey, './cadastral_not_found/' . $fileName) && file_exists($fileKey)) {
+            if (copy($fileKey, public_path('cadastral_not_found') . '/' . $fileName) && file_exists($fileKey)) {
                 unlink($fileKey);
             }
             throw new \Exception('subdivision_not_found');

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use DB;
-use Illuminate\Support\Facades\Storage;
+use App\Jobs\Cadastral;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
-use App\Libraries\Util;
+use Illuminate\Support\Facades\Storage;
 use PHPImageWorkshop\ImageWorkshop;
 
 class ExamController extends Controller
@@ -13,11 +13,31 @@ class ExamController extends Controller
 
     protected function index()
     {
+        ini_set('memory_limit', 0);
+        $items = scandir(public_path('cadastral'));
+        foreach ($items as $item) {
+            if ($item == '.' || $item == '..' || $item == '.gitignore') {
+                continue;
+            }
+            $exp = explode(".", $item);
+            $ext = $exp[count($exp) - 1];
+            if ($ext == 'jpg') {
+                $cacheId = "cadastral:flag:" . $item;
+                if (Cache::has($cacheId)) {
+                    continue;
+                }
+                Cache::put($cacheId, true, 3600);
+                $req = ['path' => public_path('cadastral') . '/' . $item];
+                Cadastral::dispatch($req)->onQueue("cadastral" . rand(1, 10));
+            } else if ($ext == 'jgw') {
+                unlink(public_path('cadastral') . '/' . $item);
+            }
+        }
     }
 
     protected function cadastral()
     {
-        $fileKey = "./cadastral/d_599562.658601852_1189921.48787835z_o.jpg";
+        $fileKey = public_path('cadastral/d_599562.658601852_1189921.48787835z_o.jpg');
 
         $oX = $oY = $fileType = null;
         $fileName = explode("/", $fileKey);
@@ -37,7 +57,7 @@ class ExamController extends Controller
         $data = DB::table("geo_land_item")->where("properties->vn2000", $vn2k)->first();
         $subdivision = isset($data) && isset($data->subdivision_id) ? $data->subdivision_id : 0;
         if ($subdivision == 0) {
-            if (copy($fileKey, './cadastral_not_found/' . $fileName) && file_exists($fileKey)) {
+            if (copy($fileKey, public_path('cadastral_not_found') . '/' . $fileName) && file_exists($fileKey)) {
                 unlink($fileKey);
             }
             throw new \Exception('subdivision_not_found');
