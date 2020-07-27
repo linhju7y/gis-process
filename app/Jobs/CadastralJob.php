@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use PHPImageWorkshop\ImageWorkshop;
 
-class Cadastral implements ShouldQueue
+class CadastralJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\Cadastral;
+use App\Jobs\CadastralJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -28,7 +28,7 @@ class ExamController extends Controller
                 }
                 Cache::put($cacheId, true, 3600);
                 $req = ['path' => public_path('cadastral') . '/' . $item];
-                Cadastral::dispatch($req)->onQueue("cadastral" . rand(1, 10));
+                CadastralJob::dispatch($req)->onQueue("cadastral" . rand(1, 10));
             } else if ($ext == 'jgw') {
                 unlink(public_path('cadastral') . '/' . $item);
             }

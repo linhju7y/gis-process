@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 
-use App\Jobs\Cadastral;
+use App\Jobs\CadastralJob;
 use Illuminate\Support\Facades\Cache;
 
 class CadastralCommand extends Command
@@ -54,7 +54,7 @@ class CadastralCommand extends Command
                 }
                 Cache::put($cacheId, true, 3600);
                 $req = ['path' => public_path('cadastral') . '/' . $item];
-                Cadastral::dispatch($req)->onQueue("cadastral" . rand(1, 10));
+                CadastralJob::dispatch($req)->onQueue("cadastral" . rand(1, 10));
             } else if ($ext == 'jgw') {
                 unlink(public_path('cadastral') . '/' . $item);
             }
