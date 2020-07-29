@@ -28,7 +28,7 @@ class ExamController extends Controller
                 }
                 Cache::put($cacheId, true, 3600);
                 $req = ['path' => public_path('cadastral') . '/' . $item];
-                CadastralJob::dispatch($req)->onQueue("cadastral" . rand(1, 10));
+                CadastralJob::dispatch($req)->onQueue("cadastral" . rand(1, 4));
             } else if ($ext == 'jgw') {
                 unlink(public_path('cadastral') . '/' . $item);
             }
@@ -37,7 +37,7 @@ class ExamController extends Controller
 
     protected function cadastral()
     {
-        $fileKey = public_path('cadastral/d_599562.658601852_1189921.48787835z_o.jpg');
+        $fileKey = ('./cadastral/d_601195.861790158_1189399.23062997_o.jpg');
 
         $oX = $oY = $fileType = null;
         $fileName = explode("/", $fileKey);
@@ -85,20 +85,25 @@ class ExamController extends Controller
         $mH = ($height / 2) - ($pH / 2);
         $mH = $mH < 0 ? 0 : $mH;
         $image->addLayerOnTop($photo, $mW, $mH, "lt");
-
-        $watermark = ImageWorkshop::initFromPath("img/watermark.png");
+        $watermark = ImageWorkshop::initFromPath(public_path("img/watermark.png"));
         $image->addLayerOnTop($watermark, 0, 0, "lt");
-        $imgContent = $image->getResult();
-        $tempFile = tempnam(sys_get_temp_dir(), '');
-        imagejpeg($imgContent, $tempFile, 100);
 
-        $s3url = "/" . $subdivision . "/" . $saveName;
-        $res = Storage::disk('s3')->put('cadastral' . $s3url, file_get_contents($tempFile), 'public');
+        $dirPath = public_path("results") . '/' . $subdivision;
+        if(!(file_exists($dirPath) && is_dir($dirPath))) {
+            mkdir($dirPath);
+        }
+        $image->save($dirPath, $saveName, true);
+
+
+        // $tempFile = tempnam(sys_get_temp_dir(), '');
+        // imagejpeg($image->getResult(), $tempFile, 100);
+        // $s3url = "/" . $subdivision . "/" . $saveName;
+        // $res = Storage::disk('s3')->put('cadastral' . $s3url, file_get_contents($tempFile), 'public');
         if (file_exists($fileKey)) {
             unlink($fileKey);
         }
-        if ($res && file_exists($tempFile)) {
-            unlink($tempFile);
-        }
+        // if ($res && file_exists($tempFile)) {
+        //     unlink($tempFile);
+        // }
     }
 }

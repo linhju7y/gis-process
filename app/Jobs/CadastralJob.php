@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use PHPImageWorkshop\ImageWorkshop;
@@ -40,6 +41,7 @@ class CadastralJob implements ShouldQueue
     public function handle()
     {
         $fileKey = $this->req['path'];
+        if(!file_exists($fileKey)) return;
 
         $oX = $oY = $fileType = null;
         $fileName = explode("/", $fileKey);
@@ -87,20 +89,25 @@ class CadastralJob implements ShouldQueue
         $mH = ($height / 2) - ($pH / 2);
         $mH = $mH < 0 ? 0 : $mH;
         $image->addLayerOnTop($photo, $mW, $mH, "lt");
-
-        $watermark = ImageWorkshop::initFromPath("img/watermark.png");
+        $watermark = ImageWorkshop::initFromPath(public_path("img/watermark.png"));
         $image->addLayerOnTop($watermark, 0, 0, "lt");
-        $imgContent = $image->getResult();
-        $tempFile = tempnam(sys_get_temp_dir(), '');
-        imagejpeg($imgContent, $tempFile, 100);
+        
+        $dirPath = public_path("results") . '/' . $subdivision;
+        if(!(file_exists($dirPath) && is_dir($dirPath))) {
+            mkdir($dirPath);
+        }
+        $image->save($dirPath, $saveName, true);
 
-        $s3url = "/" . $subdivision . "/" . $saveName;
-        $res = Storage::disk('s3')->put('cadastral' . $s3url, file_get_contents($tempFile), 'public');
+
+        // $tempFile = tempnam(sys_get_temp_dir(), '');
+        // imagejpeg($image->getResult(), $tempFile, 100);
+        // $s3url = "/" . $subdivision . "/" . $saveName;
+        // $res = Storage::disk('s3')->put('cadastral' . $s3url, file_get_contents($tempFile), 'public');
         if (file_exists($fileKey)) {
             unlink($fileKey);
         }
-        if ($res && file_exists($tempFile)) {
-            unlink($tempFile);
-        }
+        // if ($res && file_exists($tempFile)) {
+        //     unlink($tempFile);
+        // }
     }
 }
