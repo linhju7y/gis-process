@@ -13,6 +13,7 @@ class ExamController extends Controller
 
     protected function index()
     {
+        Cache::flush();die;
         ini_set('memory_limit', 0);
         $items = scandir(public_path('cadastral'));
         foreach ($items as $item) {

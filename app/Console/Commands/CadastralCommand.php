@@ -43,7 +43,7 @@ class CadastralCommand extends Command
     {
         $items = scandir(public_path('cadastral'));
         foreach ($items as $item) {
-            if ($item == '.' || $item == '..' || $item == '.gitignore') {
+            if (in_array($item, ['.', '..', '.gitignore'])) {
                 continue;
             }
             $exp = explode(".", $item);
@@ -55,7 +55,7 @@ class CadastralCommand extends Command
                 }
                 Cache::put($cacheId, true, 36000);
                 $req = ['path' => public_path('cadastral') . '/' . $item];
-                CadastralJob::dispatch($req)->onQueue("cadastral" . rand(1, 8));
+                CadastralJob::dispatch($req)->onQueue("cadastral" . rand(1, env('CADASTRAL_QUEUE', 12)));
             } else if ($ext == 'jgw') {
                 unlink(public_path('cadastral') . '/' . $item);
             }
