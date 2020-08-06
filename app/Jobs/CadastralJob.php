@@ -58,7 +58,18 @@ class CadastralJob implements ShouldQueue
             Cache::forget($cacheId);
         }
 
-        $data = DB::table("geo_land_item")->where("properties->vn2000", $vn2k)->first();
+        $districtId = env('CADASTRAL_DIST', 0);
+        if($districtId != 0) {
+            $districtId = intval($districtId);
+            $data = DB::table("geo_land_item as a")
+                ->join("geo_subdivision as b", "a.subdivision_id", "b.id")
+                ->where("b.parent_id", $districtId)
+                ->where("a.properties->vn2000", $vn2k)->first();
+        } else {
+            $data = DB::table("geo_land_item")
+                ->where("properties->vn2000", $vn2k)->first();
+        }
+
         $subdivision = isset($data) && isset($data->subdivision_id) ? $data->subdivision_id : 0;
         if ($subdivision == 0) {
             if (copy($fileKey, public_path('cadastral_not_found') . '/' . $fileName) && file_exists($fileKey)) {
