@@ -38,7 +38,7 @@ class ExamController extends Controller
 
     protected function cadastral()
     {
-        $fileKey = ('./cadastral/d_601195.861790158_1189399.23062997_o.jpg');
+        $fileKey = ('./d_610152.267591708_1196343.40463893_z.jpg');
 
         $oX = $oY = $fileType = null;
         $fileName = explode("/", $fileKey);
@@ -49,13 +49,27 @@ class ExamController extends Controller
         $oX = $fileNameArr[2];
         $oY = $fileNameArr[1];
         $vn2k = $oY . "," . $oX;
-
         $cacheId = "cadastral:flag:" . $fileName;
         if (Cache::has($cacheId)) {
             Cache::forget($cacheId);
         }
 
-        $data = DB::table("geo_land_item")->where("properties->vn2000", $vn2k)->first();
+        $districtId = env('CADASTRAL_DIST', 0);
+        echo "Started: " . date("Y-m-d H:i:s") . "<br>";
+        if($districtId != 0) {
+            $districtId = intval($districtId);
+            // $data = DB::table("geo_land_item as a")
+            //     ->join("geo_subdivision as b", "a.subdivision_id", "b.id")
+            //     ->where("b.parent_id", $districtId)
+            //     ->where("a.properties->vn2000", $vn2k)->select("a.*")->first();
+            $data = DB::select(DB::raw("select a.* from geo_land_item a join geo_subdivision b on a.subdivision_id = b.id where b.parent_id = " . $districtId . " and JSON_EXTRACT(a.properties, \"$.vn2000\") = '" . $vn2k . "' limit 1"));
+            if(isset($data) && count($data) > 0) {
+                $data = $data[0];
+            } else $data = null;
+        } else {
+            $data = DB::table("geo_land_item")
+                ->where("properties->vn2000", $vn2k)->first();
+        }
         $subdivision = isset($data) && isset($data->subdivision_id) ? $data->subdivision_id : 0;
         if ($subdivision == 0) {
             if (copy($fileKey, public_path('cadastral_not_found') . '/' . $fileName) && file_exists($fileKey)) {
@@ -88,7 +102,7 @@ class ExamController extends Controller
         $image->addLayerOnTop($photo, $mW, $mH, "lt");
         $watermark = ImageWorkshop::initFromPath(public_path("img/watermark.png"));
         $image->addLayerOnTop($watermark, 0, 0, "lt");
-
+        
         $dirPath = public_path("results") . '/' . $subdivision;
         if(!(file_exists($dirPath) && is_dir($dirPath))) {
             mkdir($dirPath);

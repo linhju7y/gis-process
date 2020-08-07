@@ -61,10 +61,15 @@ class CadastralJob implements ShouldQueue
         $districtId = env('CADASTRAL_DIST', 0);
         if($districtId != 0) {
             $districtId = intval($districtId);
-            $data = DB::table("geo_land_item as a")
-                ->join("geo_subdivision as b", "a.subdivision_id", "b.id")
-                ->where("b.parent_id", $districtId)
-                ->where("a.properties->vn2000", $vn2k)->first();
+            // $data = DB::table("geo_land_item as a")
+            //     ->join("geo_subdivision as b", "a.subdivision_id", "b.id")
+            //     ->where("b.parent_id", $districtId)
+            //     ->where("a.properties->vn2000", $vn2k)->first();
+                
+            $data = DB::select(DB::raw("select a.* from geo_land_item a join geo_subdivision b on a.subdivision_id = b.id where b.parent_id = " . $districtId . " and JSON_EXTRACT(a.properties, \"$.vn2000\") = '" . $vn2k . "' limit 1"));
+            if(isset($data) && count($data) > 0) {
+                $data = $data[0];
+            } else $data = null;
         } else {
             $data = DB::table("geo_land_item")
                 ->where("properties->vn2000", $vn2k)->first();
