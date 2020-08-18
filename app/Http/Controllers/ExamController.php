@@ -13,8 +13,8 @@ class ExamController extends Controller
 
     protected function index()
     {
-        Cache::flush();die;
         ini_set('memory_limit', 0);
+        Cache::flush();die;
         $items = scandir(public_path('cadastral'));
         foreach ($items as $item) {
             if ($item == '.' || $item == '..' || $item == '.gitignore') {
@@ -120,5 +120,36 @@ class ExamController extends Controller
         // if ($res && file_exists($tempFile)) {
         //     unlink($tempFile);
         // }
+    }
+
+    protected function rotatewgs84() {
+        $fileKey = public_path("rotate_input/d_106.694_10.79141_h.jpg");
+        if(!file_exists($fileKey)) return;
+        $fileName = explode("/", $fileKey);
+        $fileName = $fileName[count($fileName) - 1];
+        $fileNameArr = explode("_", $fileName);
+        dd($fileNameArr);
+    }
+
+    protected function rotatewgs84image() {
+        ini_set('max_execution_time', 0);
+        ini_set('memory_limit', 0);
+        $ids = DB::select(DB::raw("SELECT a.id, a.wgs84_lat, a.wgs84_lng FROM geo_land_item a
+            JOIN geo_subdivision b ON a.subdivision_id = b.id
+            WHERE b.parent_id IN (9299) 
+            AND a.wgs84_lat > 100"));// 9288,9527,9299
+        foreach($ids as $i) {
+            $wgs84_lat = $i->wgs84_lng;
+            $wgs84_lng = $i->wgs84_lat;
+            $wgs84 = "POINT(" . $wgs84_lat . " " . $wgs84_lng . ")";
+            DB::table("geo_land_item")
+                ->where("id", $i->id)
+                ->update([
+                    'wgs84' => DB::raw("ST_GeomFromText('" . $wgs84 . "')"),
+                    'wgs84_lat' => $wgs84_lat,
+                    'wgs84_lng' => $wgs84_lng
+                ]);
+        }
+        dd(time());
     }
 }

@@ -13,7 +13,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        'App\Console\Commands\CadastralCommand'
+        'App\Console\Commands\CadastralCommand',
+        'App\Console\Commands\RotateWgs84Command'
     ];
 
     /**
@@ -25,6 +26,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('cadastral:scan')->everyFiveMinutes();
+        $schedule->command('rotatewgs84:scan')->everyMinute();
         // $schedule->command('inspire')
         //          ->hourly();
     }

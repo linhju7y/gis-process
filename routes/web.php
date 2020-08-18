@@ -18,6 +18,7 @@ Route::get('/', function () {
 Route::group(['prefix' => 'exam'], function() {
     Route::get("/", 'ExamController@index');
     Route::get("cadastral", 'ExamController@cadastral');
+    Route::get("rotatewgs84", 'ExamController@rotatewgs84');
 });
 
 Route::group(['prefix' => 'api'], function() {

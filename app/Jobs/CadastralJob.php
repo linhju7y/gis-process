@@ -51,6 +51,11 @@ class CadastralJob implements ShouldQueue
         $fileType = $subName[0];
         $oX = $fileNameArr[2];
         $oY = $fileNameArr[1];
+        if(count(explode(".", $oX)) > 2 || count(explode(".", $oY)) > 2) {
+            $newLoc = explode(".", $oX);
+            $oX = $newLoc[2] . '.' . $newLoc[3];
+            $oY = $newLoc[0] . '.' . $newLoc[1];
+        }
         $vn2k = $oY . "," . $oX;
 
         $cacheId = "cadastral:flag:" . $fileName;
@@ -76,7 +81,7 @@ class CadastralJob implements ShouldQueue
         }
 
         $subdivision = isset($data) && isset($data->subdivision_id) ? $data->subdivision_id : 0;
-        if ($subdivision == 0) {
+        if ($subdivision == 0 || !in_array(trim(strtolower($fileType)), ['o', 'z', 'h'])) {
             if (copy($fileKey, public_path('cadastral_not_found') . '/' . $fileName) && file_exists($fileKey)) {
                 unlink($fileKey);
             }
@@ -101,9 +106,9 @@ class CadastralJob implements ShouldQueue
         $pW = $photo->getWidth();
         $pH = $photo->getHeight();
         $mW = ($width / 2) - ($pW / 2);
-        $mW = $mW < 0 ? 0 : $mW;
+        // $mW = $mW < 0 ? 0 : $mW;
         $mH = ($height / 2) - ($pH / 2);
-        $mH = $mH < 0 ? 0 : $mH;
+        // $mH = $mH < 0 ? 0 : $mH;
         $image->addLayerOnTop($photo, $mW, $mH, "lt");
         $watermark = ImageWorkshop::initFromPath(public_path("img/watermark.png"));
         $image->addLayerOnTop($watermark, 0, 0, "lt");
