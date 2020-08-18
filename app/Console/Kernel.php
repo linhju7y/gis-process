@@ -25,7 +25,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('cadastral:scan')->everyFiveMinutes();
+        $schedule->command('cadastral:scan')->everyMinute();
         $schedule->command('rotatewgs84:scan')->everyMinute();
         // $schedule->command('inspire')
         //          ->hourly();
