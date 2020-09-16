@@ -129,4 +129,38 @@ class GeoController extends Controller
         }
         return view("geo.flushland", ['echo' => ($echo ?? "")]);
     }
+
+    protected function visualtsss() {
+        $file = "Q1_missingtsss.csv";
+        $row = 1;
+        if (($handle = fopen($file, "r")) !== FALSE) {
+            while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                $num = count($data);
+                $row++;
+                if (!is_numeric($data[2]) || !is_numeric($data[3])) {
+                    continue;
+                }
+                $lat = floatval($data[2]);
+                $lng = floatval($data[3]);
+                $query = "SELECT a.id, a.subdivision_id, a.properties, a.wgs84_lat, a.wgs84_lng, a.geojson, UNIX_TIMESTAMP(a.created_at) as created_at, b.label as purpose_label 
+                FROM geo_land_item a
+                LEFT JOIN geo_land_purpose b ON a.purpose_id = b.id
+                WHERE ST_Contains(a.`geometry`, ST_GeomFromText('POINT(" . $lat . " " . $lng . ")'))";
+                $query .= " AND a.subdivision_id IN (9289, 9290, 9291, 9292, 9293, 9294, 9295, 9296, 9297, 9298)";
+                $dataset = DB::select(DB::raw($query));
+                if(count($dataset)) {
+                    $datarow = $dataset[0];
+                    DB::table("prp_calcfail")->insertGetId([
+                        "subdivision_id" => $datarow->subdivision_id,
+                        "land_id" => $datarow->id
+                    ]);
+                }
+                echo "<p> $num fields in line $row: <br /></p>\n";
+                for ($c=0; $c < $num; $c++) {
+                    echo $data[$c] . "<br />\n";
+                }
+            }
+            fclose($handle);
+        }
+    }
 }
